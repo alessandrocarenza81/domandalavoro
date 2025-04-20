@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piattaforma Lavoro</title>
+    <title>Piattaforma Incontro Domanda e Offerta di Lavoro - Leader Soc. Coop. Consortile</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,66 +81,80 @@
             color: #777;
             font-style: italic;
         }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 10px 0;
+            background-color: #0056b3;
+            color: white;
+            font-size: 14px;
+        }
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <h1>Piattaforma Incontro Domanda e Offerta di Lavoro</h1>
-
+    <h1>Piattaforma Incontro Domanda e Offerta di Lavoro - Leader Soc. Coop. Consortile</h1>
     <div class="container">
         <div class="column">
             <h2>Offerte di Lavoro</h2>
             <div id="job-offers-list">
                 <!-- Le offerte di lavoro verranno inserite qui tramite JavaScript -->
             </div>
-
             <h3>Aggiungi Offerta di Lavoro</h3>
             <form id="add-job-offer-form">
                 <label for="job-title">Titolo Posizione:</label>
                 <input type="text" id="job-title" name="job-title" required>
-
                 <label for="company">Azienda:</label>
                 <input type="text" id="company" name="company" required>
-
                 <label for="job-description">Descrizione Offerta:</label>
                 <textarea id="job-description" name="job-description" rows="3"></textarea>
-
                 <label for="job-skills">Competenze Richieste (separate da virgola):</label>
                 <input type="text" id="job-skills" name="job-skills" placeholder="es: Java, HTML, CSS">
-
                 <button type="submit">Aggiungi Offerta</button>
             </form>
         </div>
-
         <div class="column">
             <h2>Candidati in Cerca di Lavoro</h2>
             <div id="job-seekers-list">
                 <!-- I candidati verranno inseriti qui tramite JavaScript -->
             </div>
-
             <h3>Registra un Nuovo Candidato</h3>
             <form id="add-job-seeker-form">
                 <label for="seeker-name">Nome e Cognome:</label>
                 <input type="text" id="seeker-name" name="seeker-name" required>
-
                 <label for="seeker-skills">Competenze (separate da virgola):</label>
                 <input type="text" id="seeker-skills" name="seeker-skills" placeholder="es: Saldatura, Contabilità, Inglese">
-
                 <label for="seeker-contact">Informazioni di Contatto (Email o Telefono):</label>
                 <input type="text" id="seeker-contact" name="seeker-contact">
-
                 <button type="submit">Registra Candidato</button>
             </form>
         </div>
     </div>
-
+    <footer>
+        Copyright 2025 - Alessandro Carenza | 
+        <a href="mailto:alessandro.carenza@gmail.com">Contattaci</a>
+    </footer>
     <script>
         const jobOffersList = document.getElementById('job-offers-list');
         const jobSeekersList = document.getElementById('job-seekers-list');
         const addJobOfferForm = document.getElementById('add-job-offer-form');
         const addJobSeekerForm = document.getElementById('add-job-seeker-form');
 
-        let jobOffers = []; // Array per memorizzare le offerte di lavoro
-        let jobSeekers = []; // Array per memorizzare i candidati
+        // Carica i dati dal localStorage all'avvio
+        let jobOffers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+        let jobSeekers = JSON.parse(localStorage.getItem('jobSeekers')) || [];
+
+        // Funzione per salvare i dati nel localStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('jobOffers', JSON.stringify(jobOffers));
+            localStorage.setItem('jobSeekers', JSON.stringify(jobSeekers));
+        }
 
         // Funzione per visualizzare le offerte di lavoro
         function renderJobOffers() {
@@ -166,6 +180,7 @@
         // Funzione per rimuovere un'offerta di lavoro
         function removeJobOffer(index) {
             jobOffers.splice(index, 1);
+            saveDataToLocalStorage();
             renderJobOffers();
             renderJobSeekers(); // Ricalcola i match dopo la rimozione dell'offerta
         }
@@ -195,6 +210,7 @@
         // Funzione per rimuovere un candidato
         function removeJobSeeker(index) {
             jobSeekers.splice(index, 1);
+            saveDataToLocalStorage();
             renderJobSeekers();
         }
 
@@ -221,7 +237,6 @@
             }
         }
 
-
         // Funzione per controllare se ci sono competenze in comune tra candidato e offerta
         function checkSkillMatch(seekerSkills, offerSkills) {
             for (const seekerSkill of seekerSkills) {
@@ -240,11 +255,10 @@
             const description = document.getElementById('job-description').value;
             const skillsInput = document.getElementById('job-skills').value;
             const skills = skillsInput.split(',').map(skill => skill.trim());
-
             jobOffers.push({ title, company, description, skills });
+            saveDataToLocalStorage();
             renderJobOffers();
             renderJobSeekers(); // Ricalcola i match quando si aggiunge una nuova offerta
-
             // Reset del form
             addJobOfferForm.reset();
         });
@@ -256,31 +270,16 @@
             const skillsInput = document.getElementById('seeker-skills').value;
             const skills = skillsInput.split(',').map(skill => skill.trim());
             const contact = document.getElementById('seeker-contact').value;
-
             jobSeekers.push({ name, skills, contact });
+            saveDataToLocalStorage();
             renderJobSeekers();
-
             // Reset del form
             addJobSeekerForm.reset();
         });
 
-        // Dati di esempio iniziali (possono essere rimossi o modificati)
-        jobOffers = [
-            { title: 'Sviluppatore Web Front-End', company: 'Tech Solutions Srl', description: 'Cerchiamo sviluppatore con esperienza in React e JavaScript.', skills: ['JavaScript', 'HTML', 'CSS', 'React'] },
-            { title: 'Addetto/a Vendite', company: 'Retail Group Spa', description: 'Offerta di lavoro per commessi/e con buone capacità comunicative.', skills: ['Vendita', 'Comunicazione', 'Assistenza clienti'] },
-            { title: 'Operaio Specializzato CNC', company: 'Metalmeccanica Rossi', description: 'Richiesta esperienza nella programmazione di macchine CNC.', skills: ['CNC', 'Programmazione CNC', 'Meccanica'] }
-        ];
-
-        jobSeekers = [
-            { name: 'Mario Rossi', skills: ['HTML', 'CSS', 'JavaScript'], contact: 'mario.rossi@email.com' },
-            { name: 'Laura Bianchi', skills: ['Vendita', 'Marketing', 'Inglese'], contact: 'laura.bianchi@telefono.it' },
-            { name: 'Giovanni Verdi', skills: ['Saldatura', 'CNC', 'Lettura disegno tecnico'], contact: 'giovanni.verdi@mail.net' }
-        ];
-
         // Rendering iniziale delle offerte e dei candidati
         renderJobOffers();
         renderJobSeekers();
-
     </script>
 </body>
 </html>
