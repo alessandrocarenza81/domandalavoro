@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piattaforma Incontro Domanda e Offerta di Lavoro - Leader Soc. Coop. Consortile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        .column {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .job-offer, .job-seeker {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .job-offer h3, .job-seeker h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .job-offer p, .job-seeker p {
+            margin: 5px 0;
+        }
+        .job-offer .skills, .job-seeker .skills {
+            font-style: italic;
+            color: #666;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        form input[type="text"],
+        form textarea,
+        form button {
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        form button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-top: 15px;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        #job-offers-list, #job-seekers-list {
+            margin-top: 20px;
+        }
+        .match-highlight {
+            background-color: #ffe0b2; /* Light orange for highlighting matches */
+        }
+        .no-matches {
+            color: #777;
+            font-style: italic;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 10px 0;
+            background-color: #0056b3;
+            color: white;
+            font-size: 14px;
+        }
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Piattaforma Incontro Domanda e Offerta di Lavoro - Leader Soc. Coop. Consortile</h1>
+    <div class="container">
+        <div class="column">
+            <h2>Offerte di Lavoro</h2>
+            <div id="job-offers-list">
+                <!-- Le offerte di lavoro verranno inserite qui tramite JavaScript -->
+            </div>
+            <h3>Aggiungi Offerta di Lavoro</h3>
+            <form id="add-job-offer-form">
+                <label for="job-title">Titolo Posizione:</label>
+                <input type="text" id="job-title" name="job-title" required>
+                <label for="company">Azienda:</label>
+                <input type="text" id="company" name="company" required>
+                <label for="job-description">Descrizione Offerta:</label>
+                <textarea id="job-description" name="job-description" rows="3"></textarea>
+                <label for="job-skills">Competenze Richieste (separate da virgola):</label>
+                <input type="text" id="job-skills" name="job-skills" placeholder="es: Java, HTML, CSS">
+                <button type="submit">Aggiungi Offerta</button>
+            </form>
+        </div>
+        <div class="column">
+            <h2>Candidati in Cerca di Lavoro</h2>
+            <div id="job-seekers-list">
+                <!-- I candidati verranno inseriti qui tramite JavaScript -->
+            </div>
+            <h3>Registra un Nuovo Candidato</h3>
+            <form id="add-job-seeker-form">
+                <label for="seeker-name">Nome e Cognome:</label>
+                <input type="text" id="seeker-name" name="seeker-name" required>
+                <label for="seeker-skills">Competenze (separate da virgola):</label>
+                <input type="text" id="seeker-skills" name="seeker-skills" placeholder="es: Saldatura, Contabilità, Inglese">
+                <label for="seeker-contact">Informazioni di Contatto (Email o Telefono):</label>
+                <input type="text" id="seeker-contact" name="seeker-contact">
+                <button type="submit">Registra Candidato</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        Copyright 2025 - Alessandro Carenza | 
+        <a href="mailto:alessandro.carenza@gmail.com">Contattaci</a>
+    </footer>
+    <script>
+        const jobOffersList = document.getElementById('job-offers-list');
+        const jobSeekersList = document.getElementById('job-seekers-list');
+        const addJobOfferForm = document.getElementById('add-job-offer-form');
+        const addJobSeekerForm = document.getElementById('add-job-seeker-form');
+
+        // Carica i dati dal localStorage all'avvio
+        let jobOffers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+        let jobSeekers = JSON.parse(localStorage.getItem('jobSeekers')) || [];
+
+        // Funzione per salvare i dati nel localStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('jobOffers', JSON.stringify(jobOffers));
+            localStorage.setItem('jobSeekers', JSON.stringify(jobSeekers));
+        }
+
+        // Funzione per visualizzare le offerte di lavoro
+        function renderJobOffers() {
+            jobOffersList.innerHTML = '';
+            if (jobOffers.length === 0) {
+                jobOffersList.innerHTML = '<p class="no-matches">Nessuna offerta di lavoro disponibile al momento.</p>';
+                return;
+            }
+            jobOffers.forEach((offer, index) => {
+                const offerDiv = document.createElement('div');
+                offerDiv.classList.add('job-offer');
+                offerDiv.innerHTML = `
+                    <h3>${offer.title}</h3>
+                    <p><strong>Azienda:</strong> ${offer.company}</p>
+                    ${offer.description ? `<p><strong>Descrizione:</strong> ${offer.description}</p>` : ''}
+                    <p class="skills"><strong>Competenze richieste:</strong> ${offer.skills.join(', ')}</p>
+                    <button onclick="removeJobOffer(${index})">Rimuovi Offerta</button>
+                `;
+                jobOffersList.appendChild(offerDiv);
+            });
+        }
+
+        // Funzione per rimuovere un'offerta di lavoro
+        function removeJobOffer(index) {
+            jobOffers.splice(index, 1);
+            saveDataToLocalStorage();
+            renderJobOffers();
+            renderJobSeekers(); // Ricalcola i match dopo la rimozione dell'offerta
+        }
+
+        // Funzione per visualizzare i candidati
+        function renderJobSeekers() {
+            jobSeekersList.innerHTML = '';
+            if (jobSeekers.length === 0) {
+                jobSeekersList.innerHTML = '<p class="no-matches">Nessun candidato registrato al momento.</p>';
+                return;
+            }
+            jobSeekers.forEach((seeker, index) => {
+                const seekerDiv = document.createElement('div');
+                seekerDiv.classList.add('job-seeker');
+                seekerDiv.innerHTML = `
+                    <h3>${seeker.name}</h3>
+                    <p class="skills"><strong>Competenze:</strong> ${seeker.skills.join(', ')}</p>
+                    ${seeker.contact ? `<p><strong>Contatto:</strong> ${seeker.contact}</p>` : ''}
+                    <div id="matches-seeker-${index}"></div>
+                    <button onclick="removeJobSeeker(${index})">Rimuovi Candidato</button>
+                `;
+                jobSeekersList.appendChild(seekerDiv);
+                findJobMatchesForSeeker(seeker, `matches-seeker-${index}`); // Trova e visualizza i match per ogni candidato
+            });
+        }
+
+        // Funzione per rimuovere un candidato
+        function removeJobSeeker(index) {
+            jobSeekers.splice(index, 1);
+            saveDataToLocalStorage();
+            renderJobSeekers();
+        }
+
+        // Funzione per trovare e visualizzare le offerte di lavoro corrispondenti per un candidato
+        function findJobMatchesForSeeker(seeker, matchesContainerId) {
+            const matchesContainer = document.getElementById(matchesContainerId);
+            matchesContainer.innerHTML = '<h4>Offerte di lavoro potenzialmente corrispondenti:</h4>';
+            let matchesFound = false;
+            jobOffers.forEach(offer => {
+                if (checkSkillMatch(seeker.skills, offer.skills)) {
+                    matchesFound = true;
+                    const matchDiv = document.createElement('div');
+                    matchDiv.classList.add('job-offer', 'match-highlight'); // Usa le stesse classi per stile e aggiungi 'match-highlight'
+                    matchDiv.innerHTML = `
+                        <h3>${offer.title}</h3>
+                        <p><strong>Azienda:</strong> ${offer.company}</p>
+                        <p class="skills"><strong>Competenze richieste:</strong> ${offer.skills.join(', ')}</p>
+                    `;
+                    matchesContainer.appendChild(matchDiv);
+                }
+            });
+            if (!matchesFound) {
+                matchesContainer.innerHTML += '<p class="no-matches">Nessuna corrispondenza perfetta trovata al momento. Controlla altre offerte o aggiorna le competenze.</p>';
+            }
+        }
+
+        // Funzione per controllare se ci sono competenze in comune tra candidato e offerta
+        function checkSkillMatch(seekerSkills, offerSkills) {
+            for (const seekerSkill of seekerSkills) {
+                if (offerSkills.includes(seekerSkill)) {
+                    return true; // Almeno una competenza in comune
+                }
+            }
+            return false;
+        }
+
+        // Gestione del form per aggiungere offerte di lavoro
+        addJobOfferForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const title = document.getElementById('job-title').value;
+            const company = document.getElementById('company').value;
+            const description = document.getElementById('job-description').value;
+            const skillsInput = document.getElementById('job-skills').value;
+            const skills = skillsInput.split(',').map(skill => skill.trim());
+            jobOffers.push({ title, company, description, skills });
+            saveDataToLocalStorage();
+            renderJobOffers();
+            renderJobSeekers(); // Ricalcola i match quando si aggiunge una nuova offerta
+            // Reset del form
+            addJobOfferForm.reset();
+        });
+
+        // Gestione del form per aggiungere candidati
+        addJobSeekerForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('seeker-name').value;
+            const skillsInput = document.getElementById('seeker-skills').value;
+            const skills = skillsInput.split(',').map(skill => skill.trim());
+            const contact = document.getElementById('seeker-contact').value;
+            jobSeekers.push({ name, skills, contact });
+            saveDataToLocalStorage();
+            renderJobSeekers();
+            // Reset del form
+            addJobSeekerForm.reset();
+        });
+
+        // Rendering iniziale delle offerte e dei candidati
+        renderJobOffers();
+        renderJobSeekers();
+    </script>
+</body>
+</html>
