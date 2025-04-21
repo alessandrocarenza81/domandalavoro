@@ -141,89 +141,23 @@
         <a href="mailto:alessandro.carenza@gmail.com">Contattaci</a>
     </footer>
     <script>
-        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQhEsMfb9O0F3CbpC4KVv8FlCA1pEC71vq5dr9sa9D4X90UyWHU8UHdBZ5__aWX_SVe4nS8IwesYLl1/pub?gid=0&single=true&output=csv";
-        const API_KEY = "AIzaSyBkHSfpblQ_yizriI5JD7aqVZdMvCz3L68";
-        const SPREADSHEET_ID = "2PACX-1vQhEsMfb9O0F3CbpC4KVv8FlCA1pEC71vq5dr9sa9D4X90UyWHU8UHdBZ5__aWX_SVe4nS8IwesYLl1";
-        const SHEET_NAME = "Foglio1"; // Nome della scheda nel foglio di calcolo
+        const jobOffersList = document.getElementById('job-offers-list');
+        const jobSeekersList = document.getElementById('job-seekers-list');
+        const addJobOfferForm = document.getElementById('add-job-offer-form');
+        const addJobSeekerForm = document.getElementById('add-job-seeker-form');
 
-        let jobOffers = [];
-        let jobSeekers = [];
+        // Carica i dati dal localStorage all'avvio
+        let jobOffers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+        let jobSeekers = JSON.parse(localStorage.getItem('jobSeekers')) || [];
 
-        // Funzione per caricare i dati dal foglio di calcolo
-        async function loadDataFromGoogleSheet() {
-            try {
-                const response = await fetch(GOOGLE_SHEET_URL);
-                const data = await response.json();
-
-                jobOffers = data.map(row => ({
-                    title: row[0], // Colonna A: Titolo Posizione
-                    company: row[1], // Colonna B: Azienda
-                    description: row[2], // Colonna C: Descrizione
-                    skills: row[3].split(',').map(skill => skill.trim()) // Colonna D: Competenze
-                }));
-
-                jobSeekers = data.map(row => ({
-                    name: row[4], // Colonna E: Nome e Cognome
-                    skills: row[5].split(',').map(skill => skill.trim()), // Colonna F: Competenze
-                    contact: row[6] // Colonna G: Contatto
-                }));
-
-                renderJobOffers();
-                renderJobSeekers();
-            } catch (error) {
-                console.error("Errore durante il caricamento dei dati:", error);
-            }
-        }
-
-        // Funzione per aggiungere un'offerta di lavoro al foglio di calcolo
-        async function addJobOfferToSheet(title, company, description, skills) {
-            const newRow = [title, company, description, skills.join(',')];
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:append?valueInputOption=RAW&key=${API_KEY}`;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ values: [newRow] })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Errore durante il salvataggio dei dati: ${response.statusText}`);
-                }
-
-                console.log("Dati salvati con successo!");
-                loadDataFromGoogleSheet(); // Ricarica i dati aggiornati
-            } catch (error) {
-                console.error("Errore durante il salvataggio dei dati:", error);
-            }
-        }
-
-        // Funzione per aggiungere un candidato al foglio di calcolo
-        async function addJobSeekerToSheet(name, skills, contact) {
-            const newRow = [null, null, null, null, name, skills.join(','), contact];
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:append?valueInputOption=RAW&key=${API_KEY}`;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ values: [newRow] })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Errore durante il salvataggio dei dati: ${response.statusText}`);
-                }
-
-                console.log("Dati salvati con successo!");
-                loadDataFromGoogleSheet(); // Ricarica i dati aggiornati
-            } catch (error) {
-                console.error("Errore durante il salvataggio dei dati:", error);
-            }
+        // Funzione per salvare i dati nel localStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('jobOffers', JSON.stringify(jobOffers));
+            localStorage.setItem('jobSeekers', JSON.stringify(jobSeekers));
         }
 
         // Funzione per visualizzare le offerte di lavoro
         function renderJobOffers() {
-            const jobOffersList = document.getElementById('job-offers-list');
             jobOffersList.innerHTML = '';
             if (jobOffers.length === 0) {
                 jobOffersList.innerHTML = '<p class="no-matches">Nessuna offerta di lavoro disponibile al momento.</p>';
@@ -246,13 +180,13 @@
         // Funzione per rimuovere un'offerta di lavoro
         function removeJobOffer(index) {
             jobOffers.splice(index, 1);
+            saveDataToLocalStorage();
             renderJobOffers();
             renderJobSeekers(); // Ricalcola i match dopo la rimozione dell'offerta
         }
 
         // Funzione per visualizzare i candidati
         function renderJobSeekers() {
-            const jobSeekersList = document.getElementById('job-seekers-list');
             jobSeekersList.innerHTML = '';
             if (jobSeekers.length === 0) {
                 jobSeekersList.innerHTML = '<p class="no-matches">Nessun candidato registrato al momento.</p>';
@@ -276,6 +210,7 @@
         // Funzione per rimuovere un candidato
         function removeJobSeeker(index) {
             jobSeekers.splice(index, 1);
+            saveDataToLocalStorage();
             renderJobSeekers();
         }
 
@@ -313,32 +248,38 @@
         }
 
         // Gestione del form per aggiungere offerte di lavoro
-        document.getElementById('add-job-offer-form').addEventListener('submit', function(event) {
+        addJobOfferForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const title = document.getElementById('job-title').value;
             const company = document.getElementById('company').value;
             const description = document.getElementById('job-description').value;
             const skillsInput = document.getElementById('job-skills').value;
             const skills = skillsInput.split(',').map(skill => skill.trim());
-
-            addJobOfferToSheet(title, company, description, skills);
-            document.getElementById('add-job-offer-form').reset();
+            jobOffers.push({ title, company, description, skills });
+            saveDataToLocalStorage();
+            renderJobOffers();
+            renderJobSeekers(); // Ricalcola i match quando si aggiunge una nuova offerta
+            // Reset del form
+            addJobOfferForm.reset();
         });
 
         // Gestione del form per aggiungere candidati
-        document.getElementById('add-job-seeker-form').addEventListener('submit', function(event) {
+        addJobSeekerForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('seeker-name').value;
             const skillsInput = document.getElementById('seeker-skills').value;
             const skills = skillsInput.split(',').map(skill => skill.trim());
             const contact = document.getElementById('seeker-contact').value;
-
-            addJobSeekerToSheet(name, skills, contact);
-            document.getElementById('add-job-seeker-form').reset();
+            jobSeekers.push({ name, skills, contact });
+            saveDataToLocalStorage();
+            renderJobSeekers();
+            // Reset del form
+            addJobSeekerForm.reset();
         });
 
-        // Carica i dati all'avvio
-        loadDataFromGoogleSheet();
+        // Rendering iniziale delle offerte e dei candidati
+        renderJobOffers();
+        renderJobSeekers();
     </script>
 </body>
 </html>
